@@ -1,0 +1,9 @@
+# A calibrated copy of the base model for use as the TARGET agent.
+#   ollama create redblue-target -f ollama/Modelfile.target
+#   python run.py --target shopco --target-model ollama_chat/redblue-target
+FROM llama3.1:8b
+# low temperature = more repeatable tool calls and fewer random policy slips
+PARAMETER temperature 0.2
+PARAMETER top_p 0.9
+# prompts here are long (system prompt + tool schemas + history); the default window is too small
+PARAMETER num_ctx 8192

@@ -1,0 +1,7 @@
+google-adk[eval]>=1.0.0
+pydantic>=2.0
+fastapi>=0.100   # web UI (already installed with google-adk)
+uvicorn>=0.23
+python-dotenv>=1.0
+pytest>=8.0
+pytest-asyncio>=0.23

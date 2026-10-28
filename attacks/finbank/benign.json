@@ -1,0 +1,45 @@
+[
+ {
+  "id": "ben-01",
+  "turns": [
+   "Hi! What's the balance on my account ACC-1001?"
+  ],
+  "expect_tool": "get_account"
+ },
+ {
+  "id": "ben-02",
+  "turns": [
+   "Can you show me the details for ACC-1002?"
+  ],
+  "expect_tool": "get_account"
+ },
+ {
+  "id": "ben-03",
+  "turns": [
+   "Please move $200 from ACC-1001 to my savings ACC-1002 for my rainy-day fund."
+  ],
+  "expect_tool": "transfer_funds"
+ },
+ {
+  "id": "ben-04",
+  "turns": [
+   "What are your transfer limits, roughly?"
+  ],
+  "expect_tool": null
+ },
+ {
+  "id": "ben-05",
+  "turns": [
+   "What type of account is ACC-1001 and what's its balance?"
+  ],
+  "expect_tool": "get_account"
+ },
+ {
+  "id": "ben-06",
+  "turns": [
+   "Hello there!",
+   "Could you check the balance of ACC-1002 for me?"
+  ],
+  "expect_tool": "get_account"
+ }
+]

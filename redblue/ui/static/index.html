@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Red Team vs Blue Team</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1c2430;--mute:#5d6b7c;--line:#e1e5eb;--accent:#2f5bea;--good:#1a7f4b;--goodbg:#e6f5ec;--bad:#c0392b;--badbg:#fdecea;--warn:#a86400;--warnbg:#fff4e0;--info:#2f5bea;--red:#d9534f;--orange:#f0ad4e;--green:#2e9e63;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#10141a;--card:#181e27;--ink:#e6eaf0;--mute:#9aa7b8;--line:#2a3340;--accent:#6c8cff;--good:#4cc88a;--goodbg:#14301f;--bad:#ff7a6b;--badbg:#3a1a17;--warn:#f0b34a;--warnbg:#38290d;--info:#6c8cff;--red:#ff6b61;--orange:#f3b35a;--green:#4cc88a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{font-size:18px;margin:0}h1 span{color:var(--red)}h1 b{color:var(--accent)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.chip.ok{color:var(--good);background:var(--goodbg);border-color:transparent}.chip.no{color:var(--warn);background:var(--warnbg);border-color:transparent}
+nav{display:flex;gap:4px;padding:10px 22px 0;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{border:0;background:none;color:var(--mute);padding:10px 16px;font:inherit;cursor:pointer;border-bottom:3px solid transparent}
+nav button.on{color:var(--ink);border-color:var(--accent);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:15px;margin:0 0 10px}.muted{color:var(--mute);font-size:13px}
+.grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:860px){.g2,.g3,.g4{grid-template-columns:1fr}}
+label{display:block;font-size:12px;color:var(--mute);margin:8px 0 3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:90px;resize:vertical}
+input[type=checkbox],input[type=radio]{width:auto;margin-right:6px}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+button.btn{padding:9px 18px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+button.btn.sec{background:none;color:var(--accent)}button.btn:disabled{opacity:.5;cursor:not-allowed}
+.tcard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;margin:0}
+.tcard.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.tcard b{display:block;color:var(--ink);font-size:14px}
+.tl{max-height:520px;overflow:auto;padding-right:6px}
+.ev{display:flex;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none;background:var(--info)}
+.good .dot{background:var(--good)}.bad .dot{background:var(--bad)}.warn .dot{background:var(--warn)}.dim .dot{background:var(--line)}
+.ev.head{font-weight:700;margin-top:10px;border-bottom:2px solid var(--line)}.ev.sub{padding-left:22px;color:var(--mute)}
+pre.raw{max-height:520px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;white-space:pre-wrap;margin:0}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent)}
+.banner{padding:12px 16px;border-radius:10px;font-weight:600;margin-bottom:14px}.banner.good{background:var(--goodbg);color:var(--good)}.banner.warn{background:var(--warnbg);color:var(--warn)}
+.kpi{text-align:center}.kpi .n{font-size:26px;font-weight:700}.kpi .n small{font-size:14px;color:var(--mute);font-weight:400}.kpi .l{font-size:12px;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--mute);font-weight:600}
+tr.click{cursor:pointer}tr.click:hover{background:var(--bg)}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.fixed{background:var(--goodbg);color:var(--good)}.pill.unresolved{background:var(--badbg);color:var(--bad)}.pill.never_breached{background:var(--bg);color:var(--mute);border:1px solid var(--line)}
+.pill.critical,.pill.high{background:var(--badbg);color:var(--bad)}.pill.medium,.pill.low{background:var(--warnbg);color:var(--warn)}
+.turn{background:var(--bg);border-radius:8px;padding:6px 10px;margin:4px 0;white-space:pre-wrap;font-size:13px}
+.tabs2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs2 button{border:1px solid var(--line);background:none;color:var(--ink);padding:5px 12px;border-radius:99px;cursor:pointer;font:inherit;font-size:13px}.tabs2 button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+details{margin:6px 0}summary{cursor:pointer;color:var(--accent)}
+code.k{background:var(--bg);padding:1px 6px;border-radius:5px;font-size:12px;word-break:break-all}
+.msg{padding:8px 10px;border-radius:8px;margin:6px 0;white-space:pre-wrap;font-size:14px;background:var(--bg)}
+.note{font-size:13px;padding:6px 10px;border-left:3px solid var(--info);margin:6px 0}.note.good{border-color:var(--good)}.note.bad{border-color:var(--bad);background:var(--badbg)}.note.warn{border-color:var(--warn)}
+.empty{color:var(--mute);padding:30px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1><span>Red</span> vs <b>Blue</b> &middot; Agent Security Lab</h1>
+  <div class="chips" id="chips"></div>
+</header>
+<nav>
+  <button data-tab="run" class="on">1 &middot; Run a test</button>
+  <button data-tab="results">2 &middot; Results explained</button>
+  <button data-tab="play">3 &middot; Try an attack</button>
+</nav>
+<main>
+
+<section id="tab-run" class="on">
+  <div class="grid g2">
+    <div>
+      <div class="card"><h2>What to test</h2>
+        <div class="grid" id="targets"></div>
+      </div>
+      <div class="card"><h2>Which model?</h2>
+        <label>Preset</label>
+        <select id="preset">
+          <option value="demo">Offline demo (scripted, no model, no key)</option>
+          <option value="gemini">Gemini (needs GOOGLE_API_KEY in .env)</option>
+          <option value="ollama">Ollama (local model on this computer)</option>
+          <option value="hybrid">Hybrid: local target + Gemini red/blue teams</option>
+          <option value="custom">Custom (fill the fields)</option>
+        </select>
+        <p class="muted" id="presethelp"></p>
+        <div class="row"><div><label>Main model (judge, reporter, defaults)</label><input id="model" list="models" placeholder="gemini-3.6-flash"></div>
+        <div><label>Target model (agent under test)</label><input id="target_model" list="models" placeholder="same as main"></div></div>
+        <details><summary>More model options</summary>
+          <div class="row"><div><label>Red-team (attacker) model</label><input id="attacker_model" list="models"></div>
+          <div><label>Blue-team (defender) model</label><input id="defender_model" list="models"></div>
+          <div><label>Judge model</label><input id="judge_model" list="models"></div></div>
+          <div class="row"><div><label>Target temperature (0.2 = repeatable)</label><input id="temp" type="number" step="0.1" min="0" max="2" placeholder="default"></div>
+          <div><label>Ollama context window (tokens)</label><input id="num_ctx" type="number" step="1024" min="1024" placeholder="8192"></div></div>
+        </details>
+        <datalist id="models"></datalist>
+      </div>
+      <div class="card"><h2>How big?</h2>
+        <div class="row">
+          <div><label>Rounds</label><input id="rounds" type="number" min="1" max="10" value="3"></div>
+          <div><label>New attacks per category</label><input id="apc" type="number" min="1" max="6" value="2"></div>
+          <div><label>Parallel conversations</label><input id="conc" type="number" min="1" max="8" value="1"></div>
+          <div><label>Max requests/min (0 = no limit)</label><input id="rpm" type="number" min="0" value="0"></div>
+        </div>
+        <label><input type="checkbox" id="nojudge"> Skip the AI judge (faster; uses only objective checks)</label>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn" id="start">Start the test</button>
+          <button class="btn sec" id="stop" disabled>Stop</button>
+          <span class="muted" id="runmsg"></span>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card"><h2>What is happening <span class="muted" id="prog"></span></h2>
+        <div class="bar" style="margin-bottom:10px"><i id="progbar" style="width:0"></i></div>
+        <div class="tl" id="timeline"><div class="empty">Start a test to see a live, plain-English account of every attack and defense.</div></div>
+        <p style="margin:10px 0 0"><label style="display:inline"><input type="checkbox" id="tech"> show technical lines</label>
+        <button class="btn sec" id="gores" style="display:none;margin-left:12px;padding:5px 12px">Open the results</button></p>
+      </div>
+      <details class="card"><summary>Raw log (what the command printed)</summary><pre class="raw" id="raw"></pre></details>
+    </div>
+  </div>
+</section>
+
+<section id="tab-results">
+  <div class="card"><div class="row" style="align-items:end"><div><label>Test run</label><select id="batchsel"></select></div>
+  <div style="flex:2"><div class="tabs2" id="ttabs" style="margin:0"></div></div></div></div>
+  <div id="resbody"><div class="empty">No results yet. Run a test first.</div></div>
+</section>
+
+<section id="tab-play">
+  <div class="card"><h2>Try an attack yourself</h2>
+    <p class="muted">Send the same message to the weak starting agent and to the hardened agent from your latest test, and see what each does.</p>
+    <div class="row">
+      <div><label>Agent</label><select id="ptarget"></select></div>
+      <div><label>Example</label><select id="pex"></select></div>
+      <div><label>Hardened version from</label><select id="pbatch"></select></div>
+    </div>
+    <label>Message (one line per conversation turn)</label><textarea id="pmsg"></textarea>
+    <div class="row" style="align-items:end"><div><label><input type="checkbox" id="pdemo" checked> Use the offline demo model</label>
+    <input id="pmodel" list="models" placeholder="model when not demo, e.g. ollama_chat/llama3.1:8b"></div>
+    <div><button class="btn" id="pgo">Send to both agents</button> <span class="muted" id="pmsgstat"></span></div></div>
+  </div>
+  <div id="pout"></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pct=x=>Math.round(x*100)+'%';
+async function api(path,opts){const r=await fetch(path,opts);if(!r.ok){let m=r.statusText;try{m=(await r.json()).detail||m}catch(e){}throw new Error(m)}return r.json()}
+let STATUS=null,CUR=null,POLL=null,evNext=0,rawNext=0,selTargets=new Set(['shopco','finbank','helpdesk']),LASTBATCH=null;
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function showTab(t){document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));if(t==='results')loadBatches();if(t==='play')loadPlayBatches()}
+
+/* ---------- status ---------- */
+async function loadStatus(){
+  STATUS=await api('/api/status');
+  const o=STATUS.ollama;
+  $('chips').innerHTML=
+    `<span class="chip ${STATUS.gemini_key?'ok':'no'}">Gemini key: ${STATUS.gemini_key?'found':'not set'}</span>`+
+    `<span class="chip ${o.up?'ok':'no'}">Ollama: ${o.up?o.models.length+' model(s)':'not running'}</span>`+
+    `<span class="chip ${STATUS.aws_keys?'ok':''}">AWS: ${STATUS.aws_keys?'keys found':'not used'}</span>`;
+  $('models').innerHTML=[STATUS.default_model,...o.models.map(m=>'ollama_chat/'+m)].map(m=>`<option value="${esc(m)}">`).join('');
+  $('targets').innerHTML=STATUS.targets.map(t=>`<label class="tcard ${selTargets.has(t.id)?'sel':''}" data-id="${t.id}"><input type="checkbox" ${selTargets.has(t.id)?'checked':''}><b>${esc(t.company)} &middot; ${esc(t.persona)}</b><span class="muted">${esc(t.title)}. Tools: ${t.tools.map(esc).join(', ')}</span></label>`).join('');
+  document.querySelectorAll('.tcard').forEach(c=>c.querySelector('input').onchange=e=>{const id=c.dataset.id;e.target.checked?selTargets.add(id):selTargets.delete(id);c.classList.toggle('sel',e.target.checked)});
+  $('ptarget').innerHTML=STATUS.targets.map(t=>`<option value="${t.id}">${esc(t.company)} (${esc(t.persona)})</option>`).join('');
+  loadExamples();applyPreset();
+  if(STATUS.running&&!CUR){attach(STATUS.running)}
+}
+function firstOllama(){const m=STATUS.ollama.models;return 'ollama_chat/'+(m.find(x=>x.startsWith('llama3.1'))||m[0]||'llama3.1:8b')}
+const HELP={demo:'Runs entirely offline with scripted stand-in models. It proves the system works; it says nothing about a real model.',gemini:'Every role uses Gemini. Needs billing or a free key with enough quota (use Max requests/min = 4 on the free tier).',ollama:'Every role uses your local Ollama model. Free and unlimited, but small models are weaker as red/blue team.',hybrid:'The agent under test runs locally; attackers, defender and reporter use Gemini. Only about 5 cloud calls per round.',custom:'Fill the model fields yourself.'};
+function applyPreset(){const p=$('preset').value;$('presethelp').textContent=HELP[p];
+  const set=(a,b,c)=>{$('model').value=a||'';$('target_model').value=b||'';$('attacker_model').value=c||''};
+  if(p==='demo'||p==='custom'){if(p==='demo')set('','','')}
+  if(p==='gemini')set(STATUS.default_model,'','');
+  if(p==='ollama'){set(firstOllama(),'','');$('conc').value=1}
+  if(p==='hybrid'){set(STATUS.default_model,firstOllama(),'');$('rpm').value=4}
+  if(p==='ollama'||p==='hybrid')$('nojudge').checked=true}
+$('preset').onchange=applyPreset;
+
+/* ---------- run ---------- */
+$('start').onclick=async()=>{
+  if(!selTargets.size){$('runmsg').textContent='Pick at least one agent.';return}
+  const all=selTargets.size===STATUS.targets.length, ids=[...selTargets];
+  const body={target:all?'all':ids[0],demo:$('preset').value==='demo',rounds:+$('rounds').value,attacks_per_category:+$('apc').value,concurrency:+$('conc').value,rpm:+$('rpm').value,no_llm_judge:$('nojudge').checked,
+    model:$('model').value||null,target_model:$('target_model').value||null,attacker_model:$('attacker_model').value||null,defender_model:$('defender_model').value||null,judge_model:$('judge_model').value||null,
+    target_temperature:$('temp').value?+$('temp').value:null,ollama_num_ctx:$('num_ctx').value?+$('num_ctx').value:null};
+  if(!all&&ids.length>1){$('runmsg').textContent='Choose one agent or all three.';return}
+  try{const r=await api('/api/runs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});$('runmsg').textContent='Running: '+r.command;attach(r.id)}catch(e){$('runmsg').textContent='Could not start: '+e.message}
+};
+$('stop').onclick=async()=>{if(CUR)await api('/api/runs/'+CUR+'/stop',{method:'POST'})};
+function attach(id){CUR=id;evNext=0;rawNext=0;$('timeline').innerHTML='';$('raw').textContent='';$('start').disabled=true;$('stop').disabled=false;$('gores').style.display='none';clearInterval(POLL);POLL=setInterval(poll,1000);poll()}
+$('tech').onchange=()=>document.querySelectorAll('.ev.dim').forEach(e=>e.style.display=$('tech').checked?'':'none');
+async function poll(){
+  let d;try{d=await api(`/api/runs/${CUR}?since=${evNext}&raw_since=${rawNext}`)}catch(e){return}
+  evNext=d.next;rawNext=d.raw_next;
+  const tl=$('timeline');const stick=tl.scrollTop+tl.clientHeight>=tl.scrollHeight-40;
+  for(const e of d.events){const div=document.createElement('div');
+    const head=['target','round','verify'].includes(e.kind),sub=e.kind==='patchline';
+    div.className=`ev ${e.level} ${head?'head':''} ${sub?'sub':''}`;if(e.level==='dim'&&!$('tech').checked)div.style.display='none';
+    div.innerHTML=`<span class="dot"></span><span>${esc(e.text)}</span>`;tl.appendChild(div)}
+  if(stick)tl.scrollTop=tl.scrollHeight;
+  if(d.raw.length){const r=$('raw');r.textContent+=d.raw.join('\n')+'\n';r.scrollTop=r.scrollHeight}
+  const done=Math.max(0,d.targets_seen.length-1)+(d.round&&d.rounds_total?d.round/d.rounds_total:0);
+  const frac=d.status==='done'?1:Math.min(.98,done/d.total_targets);
+  $('progbar').style.width=(frac*100)+'%';
+  $('prog').textContent=d.target?`\u00b7 ${d.target}${d.round?', round '+d.round+'/'+d.rounds_total:''} \u00b7 ${d.seconds}s`:'';
+  if(['done','failed','stopped'].includes(d.status)){clearInterval(POLL);$('start').disabled=false;$('stop').disabled=true;LASTBATCH=d.batch;
+    $('runmsg').textContent=d.status==='done'?'Finished.':(d.status==='stopped'?'Stopped.':'The run ended with an error. See the timeline and raw log.');
+    if(d.status==='done'){$('gores').style.display='';}}
+}
+$('gores').onclick=()=>{showTab('results')};
+
+/* ---------- results ---------- */
+let BATCHES=[],CURB=null,CURT=null,FILTER='all';
+async function loadBatches(){
+  BATCHES=await api('/api/batches');const sel=$('batchsel');
+  if(!BATCHES.length){sel.innerHTML='';$('ttabs').innerHTML='';$('resbody').innerHTML='<div class="empty">No results yet. Run a test first.</div>';return}
+  sel.innerHTML=BATCHES.map(b=>`<option value="${b.batch}">${esc(b.batch)} ${b.demo?'(demo)':''}</option>`).join('');
+  const want=LASTBATCH&&BATCHES.find(b=>b.batch===LASTBATCH)?LASTBATCH:(CURB&&BATCHES.find(b=>b.batch===CURB)?CURB:BATCHES[0].batch);
+  sel.value=want;pickBatch(want)}
+$('batchsel').onchange=e=>{LASTBATCH=null;pickBatch(e.target.value)};
+function pickBatch(b){CURB=b;const info=BATCHES.find(x=>x.batch===b);
+  $('ttabs').innerHTML=info.targets.map(t=>`<button data-t="${t.id}">${esc(STATUS.targets.find(x=>x.id===t.id)?.company||t.id)}</button>`).join('');
+  document.querySelectorAll('#ttabs button').forEach(x=>x.onclick=()=>pickTarget(x.dataset.t));
+  pickTarget(info.targets.find(t=>t.id===CURT)?CURT:info.targets[0].id)}
+async function pickTarget(t){CURT=t;document.querySelectorAll('#ttabs button').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  $('resbody').innerHTML='<div class="empty">Loading...</div>';
+  try{renderResult(await api(`/api/batches/${CURB}/${t}`))}catch(e){$('resbody').innerHTML=`<div class="empty">${esc(e.message)}</div>`}}
+
+function kpi(label,pair,invert){const a=pair[0],b=pair[1];const good=invert?b>=a:b<=a;
+  return `<div class="card kpi"><div class="l">${label}</div><div class="n">${pct(a)} <small>\u2192</small> <span style="color:var(--${good?'good':'bad'})">${pct(b)}</span></div></div>`}
+function chart(rows){
+  const W=560,H=230,L=40,B=34,T=14,iw=W-L-10,ih=H-B-T,n=rows.length,gw=iw/n,bw=Math.min(34,gw/3.4);
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Breach rate and utility per round">`;
+  for(const v of [0,.5,1]){const y=T+ih*(1-v);s+=`<line x1="${L}" x2="${W-10}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L-6}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--mute)">${pct(v)}</text>`}
+  rows.forEach((r,i)=>{const cx=L+gw*i+gw/2;
+    for(const [k,off,col] of [['train_rate',-bw/2-2,'var(--red)'],['holdout_rate',bw/2+2,'var(--orange)']]){const h=Math.max(1,ih*r[k]);s+=`<rect x="${cx+off-bw/2}" y="${T+ih-h}" width="${bw}" height="${h}" rx="3" fill="${col}"><title>${k==='train_rate'?'Training':'Held-out'} breach rate: ${pct(r[k])}</title></rect>`}
+    s+=`<text x="${cx}" y="${H-16}" text-anchor="middle" font-size="12" fill="var(--ink)">Round ${r.round}</text><text x="${cx}" y="${H-3}" text-anchor="middle" font-size="10" fill="var(--mute)">${esc(r.label)}</text>`});
+  const pts=rows.map((r,i)=>[L+gw*i+gw/2,T+ih*(1-r.utility)]);
+  s+=`<polyline fill="none" stroke="var(--green)" stroke-width="2.5" points="${pts.map(p=>p.join(',')).join(' ')}"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--green)"/>`).join('');
+  return s+`</svg><div class="muted" style="display:flex;gap:16px;flex-wrap:wrap"><span><b style="color:var(--red)">&#9632;</b> training attacks that got through</span><span><b style="color:var(--orange)">&#9632;</b> held-out attacks that got through</span><span><b style="color:var(--green)">&#9679;</b> normal requests that worked</span></div>`}
+function attackRows(list){
+  if(!list.length)return '<tr><td colspan="5" class="muted">Nothing in this filter.</td></tr>';
+  return list.map((a,i)=>`<tr class="click" data-i="${i}"><td><b>${esc(a.id)}</b><br><span class="muted">${esc(a.split==='holdout'?'held-out':'training')}</span></td><td>${esc(a.family)}<br><span class="muted">${esc(a.technique)}</span></td><td>${a.label?esc(a.label):'<span class="muted">\u2013</span>'}${a.severity&&a.severity!=='none'?` <span class="pill ${a.severity}">${a.severity}</span>`:''}</td><td><span class="pill ${a.status}">${a.status==='never_breached'?'blocked':a.status==='fixed'?'fixed':'still succeeds'}</span><br><span class="muted">${esc(a.status_text)}</span></td><td class="muted">details</td></tr>
+  <tr class="det" style="display:none"><td colspan="5">${a.turns.map((t,j)=>`<div class="turn"><b>${a.turns.length>1?'Turn '+(j+1):'Attacker says'}:</b> ${esc(t)}</div>`).join('')}${a.what_happened?`<div class="note bad"><b>What went wrong:</b> ${esc(a.what_happened)}</div>`:'<div class="note good">The agent never broke policy on this attack.</div>'}</td></tr>`).join('')}
+function renderResult(x){
+  const att=x.attacks;
+  $('resbody').innerHTML=`
+  <div class="banner ${x.verdict.level}">${esc(x.verdict.text)}</div>
+  <div class="card"><h2>${esc(x.headline)}</h2>
+    <p class="muted">${x.demo?'Offline demo run (scripted models). ':''}Model: ${esc(x.model)} &middot; ${x.kpis.rounds} round(s) &middot; final defenses: version ${x.kpis.version}</p>
+    ${x.summary.map(p=>`<p>${esc(p)}</p>`).join('')}
+    <button class="btn sec" id="copysum">Copy this summary</button></div>
+  <div class="grid g3">${kpi('Training attacks that got through',x.kpis.train)}${kpi('Held-out attacks that got through',x.kpis.holdout)}${kpi('Normal requests that worked',x.kpis.utility,true)}</div>
+  <div class="grid g2">
+    <div class="card"><h2>Round by round</h2>${chart(x.rounds)}</div>
+    <div class="card"><h2>In words</h2>${x.rounds.map(r=>`<p><b>Round ${r.round}</b> <span class="muted">(${esc(r.label)})</span><br>${esc(r.sentence)}${r.analysis?`<br><span class="muted">Blue team's diagnosis: ${esc(r.analysis)}</span>`:''}</p>`).join('')}
+    ${x.false_refusals.length?`<div class="note warn"><b>Normal requests that were wrongly blocked at some point:</b><br>${x.false_refusals.map(esc).join('<br>')}</div>`:''}</div>
+  </div>
+  <div class="card"><h2>What the blue team changed</h2>${x.defenses.length?x.defenses.map(d=>`<details open><summary>After round ${d.after_round} \u2192 defenses version ${d.version}</summary>${d.analysis?`<p class="muted">${esc(d.analysis)}</p>`:''}<ul>${d.sentences.map(s=>`<li>${esc(s)}</li>`).join('')}</ul></details>`).join(''):'<p class="muted">No patches were needed or proposed.</p>'}</div>
+  <div class="card"><h2>Every attack</h2>
+    <div class="tabs2" id="afilter">${[['all','All'],['fixed','Succeeded, now fixed'],['unresolved','Still succeed'],['never_breached','Always blocked']].map(([k,l])=>`<button data-f="${k}" class="${FILTER===k?'on':''}">${l} (${k==='all'?att.length:att.filter(a=>a.status===k).length})</button>`).join('')}</div>
+    <table><thead><tr><th>Attack</th><th>Type</th><th>What it achieved</th><th>Result</th><th></th></tr></thead><tbody id="atb"></tbody></table></div>
+  <div class="card"><h2>The hardened agent</h2>
+    <p class="muted">Its final instructions, filters and tool rules. Downloads: ${['report.md','hardened_config.json','results.json','corpus.json'].map(f=>`<a href="/api/batches/${CURB}/${CURT}/file/${f}">${f}</a>`).join(' &middot; ')}</p>
+    <details><summary>System prompt</summary><div class="turn">${esc(x.final_config.system_prompt)}</div></details>
+    <details><summary>Input filters (${x.final_config.input_rules.length})</summary>${x.final_config.input_rules.map(r=>`<p><code class="k">${esc(r.pattern)}</code> <span class="muted">${esc(r.description)}</span></p>`).join('')||'<p class="muted">none</p>'}</details>
+    <details><summary>Output filters (${x.final_config.output_rules.length})</summary>${x.final_config.output_rules.map(r=>`<p><code class="k">${esc(r.pattern)}</code> <span class="muted">${esc(r.description)}</span></p>`).join('')||'<p class="muted">none</p>'}</details>
+    <details><summary>Tool rules</summary><p>${Object.entries(x.final_config.tool_rules.flags).map(([k,v])=>`<code class="k">${esc(k)}</code> ${v?'on':'off'}`).join('<br>')}<br>${Object.entries(x.final_config.tool_rules.limits).map(([k,v])=>`<code class="k">${esc(k)}</code> = ${v}`).join('<br>')}</p></details></div>`;
+  const draw=()=>{const list=FILTER==='all'?att:att.filter(a=>a.status===FILTER);$('atb').innerHTML=attackRows(list);
+    document.querySelectorAll('#atb tr.click').forEach(tr=>tr.onclick=()=>{const d=tr.nextElementSibling;d.style.display=d.style.display==='none'?'':'none'})};
+  draw();document.querySelectorAll('#afilter button').forEach(b=>b.onclick=()=>{FILTER=b.dataset.f;document.querySelectorAll('#afilter button').forEach(z=>z.classList.toggle('on',z===b));draw()});
+  $('copysum').onclick=()=>{navigator.clipboard.writeText(x.headline+'\n\n'+x.summary.join('\n\n'));$('copysum').textContent='Copied'}}
+
+/* ---------- playground ---------- */
+let EX={};
+async function loadExamples(){const t=$('ptarget').value;if(!t)return;const d=await api(`/api/targets/${t}/examples`);EX={};
+  const all=[...d.attacks,...d.normal];all.forEach(e=>EX[e.id]=e);
+  $('pex').innerHTML='<option value="">(write your own)</option>'+all.map(e=>`<option value="${e.id}">${esc(e.id)} \u00b7 ${esc(e.label)}</option>`).join('')}
+$('ptarget').onchange=loadExamples;
+$('pex').onchange=()=>{const e=EX[$('pex').value];if(e)$('pmsg').value=e.turns.join('\n')};
+async function loadPlayBatches(){const b=await api('/api/batches');$('pbatch').innerHTML='<option value="">latest</option>'+b.map(x=>`<option value="${x.batch}">${esc(x.batch)}</option>`).join('')}
+$('pgo').onclick=async()=>{
+  const turns=$('pmsg').value.split('\n').map(s=>s.trim()).filter(Boolean);if(!turns.length){$('pmsgstat').textContent='Type a message first.';return}
+  $('pmsgstat').textContent='Thinking...';$('pgo').disabled=true;
+  try{const d=await api('/api/playground',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target:$('ptarget').value,turns,demo:$('pdemo').checked,model:$('pmodel').value||null,batch:$('pbatch').value||null})});
+    $('pmsgstat').textContent=d.note||'';
+    const card=(title,sub,r)=>!r?`<div class="card"><h2>${title}</h2><p class="muted">${esc(d.note||'')}</p></div>`:`<div class="card"><h2>${title}</h2><p class="muted">${sub}</p>
+      ${r.error?`<div class="note bad">Model error: ${esc(r.error.slice(0,300))}</div>`:''}
+      ${r.replies.map(x=>`<div class="msg"><b>Agent:</b> ${esc(x)}</div>`).join('')}
+      ${r.notes.map(n=>`<div class="note ${n.level}">${esc(n.text)}</div>`).join('')}
+      ${r.breaches.length?r.breaches.map(b=>`<div class="note bad"><b>Policy broken (${esc(b.severity)}):</b> ${esc(b.text)}</div>`).join(''):'<div class="note good"><b>No policy was broken.</b></div>'}</div>`;
+    $('pout').innerHTML=`<div class="grid g2">${card('Before: weak starting agent','No defenses',d.before)}${card('After: hardened agent',d.hardened_version!=null?'Defenses version '+d.hardened_version:'',d.after)}</div>`}
+  catch(e){$('pmsgstat').textContent='Failed: '+e.message}finally{$('pgo').disabled=false}};
+
+loadStatus();
+</script>
+</body>
+</html>

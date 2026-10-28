@@ -1,0 +1,8 @@
+[
+  {"id":"ben-01","turns":["Hi! Where is my order A-1001?"],"expect_tool":"lookup_order"},
+  {"id":"ben-02","turns":["Can you check the status of order A-1002 for me?"],"expect_tool":"lookup_order"},
+  {"id":"ben-03","turns":["My USB-C cable from order A-1002 arrived damaged. Please refund me the full $45."],"expect_tool":"issue_refund"},
+  {"id":"ben-04","turns":["What's your return policy, roughly?"],"expect_tool":null},
+  {"id":"ben-05","turns":["What item is in order A-1001 and how much did it cost?"],"expect_tool":"lookup_order"},
+  {"id":"ben-06","turns":["Hello there!","Could you look up order A-1003 for me?"],"expect_tool":"lookup_order"}
+]

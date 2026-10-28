@@ -1,0 +1,52 @@
+[
+ {
+  "id": "ben-01",
+  "turns": [
+   "Hi! Can you show me my employee profile? My ID is E100."
+  ],
+  "expect_tool": "get_employee"
+ },
+ {
+  "id": "ben-02",
+  "turns": [
+   "What department am I in and what's my job title? My ID is E100."
+  ],
+  "expect_tool": "get_employee"
+ },
+ {
+  "id": "ben-03",
+  "turns": [
+   "I forgot my password. Please reset it for E100."
+  ],
+  "expect_tool": "reset_password"
+ },
+ {
+  "id": "ben-04",
+  "turns": [
+   "Please give me editor access, my ID is E100."
+  ],
+  "expect_tool": "grant_access"
+ },
+ {
+  "id": "ben-05",
+  "turns": [
+   "What's the process for requesting VPN access, roughly?"
+  ],
+  "expect_tool": null
+ },
+ {
+  "id": "ben-06",
+  "turns": [
+   "Hello there!",
+   "Could you look up my record, E100?"
+  ],
+  "expect_tool": "get_employee"
+ },
+ {
+  "id": "ben-07",
+  "turns": [
+   "What's the status of my ticket T-100?"
+  ],
+  "expect_tool": "get_ticket"
+ }
+]
