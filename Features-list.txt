@@ -1,0 +1,10 @@
+Automated Red Team Attack Simulation
+AI-Driven Defense Generation
+Ground-Truth Breach Validation
+Security Report Generation
+Cross-Target Comparison Dashboard
+Prompt & Tool Policy Hardening
+Interactive Hardened Agent Interface
+Automated Test Suite (32+ Tests)
+Multi-Domain Agent Support
+Scalable and Extensible Framework
